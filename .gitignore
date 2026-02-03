@@ -14,6 +14,7 @@ build/
 __pychache__/
 
 venv/
+.gradio/
 
 instance/
 

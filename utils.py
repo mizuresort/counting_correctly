@@ -10,11 +10,17 @@ def count_characters(text: str) -> int:
 
     if text is None:
         return 0
-    
-    #len()
-    return len(text)
 
-def format_character_inf0(text: str, char_count: int) -> str:
+    # Prefer Unicode grapheme cluster counting so emojis and combined characters
+    # are counted the way users perceive them (e.g., "👨‍👩‍👧‍👦" is 1).
+    try:
+        import regex  # type: ignore
+        return len(regex.findall(r"\X", text))
+    except Exception:
+        # Fallback to codepoint count if regex is unavailable.
+        return len(text)
+
+def format_character_info(text: str, char_count: int) -> str:
     """
     文字数情報を整形して返す（デバッグ用)
 

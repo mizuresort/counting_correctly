@@ -7,8 +7,16 @@ from dotenv import load_dotenv
 #環境変数を読み込み
 load_dotenv()
 
-#GEMINIクライアントの初期化
-gemini_api = GeminiAPI(api_key=os.getenv("GEMINI_API_KEY"))
+api_key = os.getenv("GEMINI_API_KEY")
+gemini_api = None
+gemini_init_error = None
+try:
+    if api_key:
+        gemini_api = GeminiAPI(api_key=api_key)
+    else:
+        gemini_init_error = "GEMINI_API_KEYが設定されていません。環境変数または .env を確認してください。"
+except Exception as e:
+    gemini_init_error = str(e)
 
 
 def chat_interface(message, history):
@@ -17,18 +25,42 @@ def chat_interface(message, history):
 
     Args:
         message: ユーザーの入力メッセージ
-        history: 会話履歴
+        history: 会話履歴（Gradio 6.0形式：辞書のリスト）
     Returns:
-        GEMINIからの応答
+        更新された会話履歴
     """
-
+    if not message.strip():
+        return history
+    
     #正確な文字数カウント
     char_count = count_characters(message)
 
-    #Geminiに送信して応答を取得する
-    response = gemini_api.get_response(message, char_count, history)
+    # Gradioのmessages形式（dictのlist）をGemini用の従来形式に変換
+    legacy_history = []
+    if history:
+        for msg in history:
+            if msg.get("role") == "user":
+                legacy_history.append([msg.get("content"), None])
+            elif msg.get("role") == "assistant" and legacy_history:
+                legacy_history[-1][1] = msg.get("content")
+    
+    # Geminiに送信して応答を取得する
+    if gemini_api is None:
+        response = (
+            f"現在AI応答は利用できません（{gemini_init_error}）。\n\n"
+            f"ただし、入力された文章の文字数は **{char_count}文字** です。"
+        )
+    else:
+        response = gemini_api.get_response(message, char_count, legacy_history)
 
-    return response
+    # 新しい履歴に追加
+    if history is None:
+        history = []
+
+    history.append({"role": "user", "content": message})
+    history.append({"role": "assistant", "content": response})
+    
+    return history
 
 #Gradio UI
 with gr.Blocks(title="正確な文字数カウンターAI") as demo:
@@ -44,11 +76,15 @@ with gr.Blocks(title="正確な文字数カウンターAI") as demo:
         - 通常のAI会話 
         """
     )
+    if gemini_init_error:
+        gr.Markdown(
+            f"**注意:** {gemini_init_error}\n\n"
+            "文字数カウント機能のみ利用できます。"
+        )
 
     chatbot = gr.Chatbot(
-        height = 500, 
-        label = "チャット",
-        #bubble_full_width=False,
+        height=500,
+        label="チャット",
     )
 
     with gr.Row():
@@ -92,12 +128,14 @@ with gr.Blocks(title="正確な文字数カウンターAI") as demo:
         outputs=msg
     )
     
-    clear.click(lambda: None, outputs=chatbot)
+    clear.click(lambda: [], outputs=chatbot)  # ← Noneから[]に変更
 
 if __name__ == "__main__":
+    port = int(os.getenv("PORT") or os.getenv("GRADIO_SERVER_PORT", "7860"))
+    share_enabled = os.getenv("GRADIO_SHARE", "false").lower() == "true"
     demo.launch(
         server_name="0.0.0.0",
-        server_port=7860,
-        share=False,
-        theme=gr.themes.Soft(),
+        server_port=port,
+        share=share_enabled,  # Spacesでは不要。必要時のみ有効化
+        theme=gr.themes.Soft()
     )
