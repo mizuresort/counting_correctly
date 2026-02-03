@@ -1,0 +1,22 @@
+.env
+
+.DS_Store
+.AppleDouble
+
+
+target/
+build/
+
+*.class
+
+#python cache
+*.pyc
+__pychache__/
+
+venv/
+
+instance/
+
+.pytest_cache/
+
+memo.md
