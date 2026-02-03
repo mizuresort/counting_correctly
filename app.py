@@ -31,7 +31,7 @@ def chat_interface(message, history):
     return response
 
 #Gradio UI
-with gr.Blocks(title="正確な文字数カウンターAI", theme =gr.themes.Soft()) as demo:
+with gr.Blocks(title="正確な文字数カウンターAI") as demo:
     gr.Markdown(
         """
        # 正確な文字数カウンターAI
@@ -48,7 +48,7 @@ with gr.Blocks(title="正確な文字数カウンターAI", theme =gr.themes.Sof
     chatbot = gr.Chatbot(
         height = 500, 
         label = "チャット",
-        bubble_full_width=False,
+        #bubble_full_width=False,
     )
 
     with gr.Row():
@@ -98,5 +98,6 @@ if __name__ == "__main__":
     demo.launch(
         server_name="0.0.0.0",
         server_port=7860,
-        share=False
+        share=False,
+        theme=gr.themes.Soft(),
     )
