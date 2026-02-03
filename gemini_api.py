@@ -104,9 +104,9 @@ class GeminiAPI:
         except requests.exceptions.RequestException as e:
             error_message = f"通信エラーが発生しました：{str(e)}"
             print(error_message)
-            return f"申し訳ございません。{error_message}\n\nただし入力は{char_count}文字です。"
+            return f"申し訳ございません。{error_message}\n\nただし入力された文章は{char_count}文字です。"
 
         except Exception as e:
             error_message = f"エラーが発生しました：{str(e)}"
             print(error_message)
-            return f"申し訳ございません。{error_message}\n\nただし、入力は{char_count}文字です。" 
+            return f"申し訳ございません。{error_message}\n\nただし、入力された文章は{char_count}文字です。" 
